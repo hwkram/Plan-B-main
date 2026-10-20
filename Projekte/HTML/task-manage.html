@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task verwalten · Plan B</title>
+  <link rel="stylesheet" href="../CSS/projects.css">
+</head>
+<body>
+  <!-- Kopfzeile wie in den Wireframes (KI-Log Nr. 38) -->
+  <header class="topbar">
+    <a class="logo" href="../../Home/HTML/index.html" aria-label="Plan B Startseite">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 22V3h11l-3 4 3 4H6"/></svg>
+    </a>
+    <nav class="nav" aria-label="Hauptnavigation">
+      <a href="../../Home/HTML/index.html">Home</a>
+      <a href="projects.html" aria-current="page">Projekte</a>
+      <a href="../../Benutzer/HTML/user.html">Benutzer</a>
+      <a href="../../Kalender/HTML/calender.html">Kalender</a>
+      <!-- Pfad anpassen, sobald die Einladungsseite existiert -->
+      <a href="../../Einladungen/HTML/invitations.html">Einladungen <span class="badge" id="invitationBadge" hidden></span></a>
+    </nav>
+    <div class="user-area">
+      <span class="user-name" id="currentUserName"></span>
+      <button class="btn" type="button" id="logoutButton">Abmelden</button>
+    </div>
+  </header>
+
+  <!-- KI-Log Nr. 36: Task verwalten (Wireframe S. 5) -->
+  <main class="page">
+    <a class="back-link" id="backToProject" href="projects.html">← Projekt</a>
+
+    <div id="pageMessage" class="page-message" role="alert" hidden></div>
+
+    <div id="manageView" hidden>
+      <h1 style="margin-top:22px" id="manageTitle">Task verwalten</h1>
+      <p class="description" style="margin-top:6px">Bestehende Aufgaben bearbeiten oder löschen. Neue Aufgaben legst du in der Projektansicht an.</p>
+
+      <div class="section-head compact" style="margin-top:28px">
+        <h2>To-Do's im Projekt</h2>
+      </div>
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr>
+              <th scope="col">Aufgabe</th>
+              <th scope="col">Typ</th>
+              <th scope="col">Priorität</th>
+              <th scope="col">Teilnehmer</th>
+              <th scope="col">Start</th>
+              <th scope="col">Ende / Frist</th>
+              <th scope="col">Teilaufgaben</th>
+              <th scope="col">Aktionen</th>
+            </tr>
+          </thead>
+          <tbody id="manageBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- KI-Log Nr. 36: Task bearbeiten (Wireframe S. 10) -->
+  <div class="modal-backdrop" id="editTaskModal" hidden>
+    <form class="modal" id="editTaskForm" role="dialog" aria-modal="true" aria-labelledby="editTaskHeading" novalidate>
+      <div class="modal-head">
+        <h2 id="editTaskHeading">Task bearbeiten</h2>
+        <button class="modal-close" type="button" data-close aria-label="Schließen">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="editTaskTitle">Titel *</label>
+          <input class="input" id="editTaskTitle" name="title" type="text" maxlength="120" required autofocus>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="editTaskType">Typ *</label>
+            <select class="select" id="editTaskType" name="type">
+              <option value="MEETING">Meeting</option>
+              <option value="LANGES_TODO">Langes To-Do</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="editTaskPriority">Priorität *</label>
+            <select class="select" id="editTaskPriority" name="priority">
+              <option value="HOCH">Hoch</option>
+              <option value="MITTEL">Mittel</option>
+              <option value="NIEDRIG">Niedrig</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="editTaskStart" id="editTaskStartLabel">Start</label>
+            <input class="input" id="editTaskStart" name="start" type="text" placeholder="TT.MM.JJJJ hh:mm" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label for="editTaskEnd" id="editTaskEndLabel">Ende / Frist *</label>
+            <input class="input" id="editTaskEnd" name="end" type="text" placeholder="TT.MM.JJJJ hh:mm" inputmode="numeric">
+          </div>
+        </div>
+        <div class="field">
+          <span class="label">Teilnehmer</span>
+          <div id="editTaskParticipants"></div>
+        </div>
+        <div class="field">
+          <label for="editTaskDescription">Beschreibung</label>
+          <textarea class="textarea" id="editTaskDescription" name="description" maxlength="1000"></textarea>
+        </div>
+
+        <fieldset class="fieldset dashed" id="editSubtaskSection">
+          <legend>Teilaufgaben (nur bei langem To-Do)</legend>
+          <p class="form-hint" style="margin-bottom:12px;font-size:13px">Alle Teilaufgaben haben die Frist des langen To-Dos. Nur Teilnehmer können sie übernehmen.</p>
+          <div id="editSubtasks"></div>
+          <button class="btn btn-dashed btn-lg" type="button" id="addSubtaskButton">+ Teilaufgabe hinzufügen</button>
+        </fieldset>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-lg left" type="button" id="deleteTaskButton">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg>
+          Task löschen
+        </button>
+        <button class="btn btn-lg" type="button" data-close>Abbrechen</button>
+        <button class="btn btn-primary btn-lg" type="submit" id="saveTaskButton">Speichern</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="../JS/api.js"></script>
+  <script src="../JS/ui.js"></script>
+  <script src="../JS/task-manage.js"></script>
+</body>
+</html>

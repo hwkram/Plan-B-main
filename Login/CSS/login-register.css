@@ -1,0 +1,92 @@
+/*KI-Log Nr. 13*/
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+/*KI-Log Nr. 2*/
+body {
+    font-family: system-ui, sans-serif;
+    background: #f6f4f5;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+} 
+
+/*KI-Log Nr. 3*/
+button {
+    margin-top: 16px;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #993556;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+} 
+
+/*KI-Log Nr. 4*/
+.login-box, .register-box {
+    background: white;
+    border: 1px solid #e5dde1;
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 360px;
+} 
+/*KI-Log Nr. 11*/
+#error-message {
+    color: red;
+    margin-top: 8px;
+    font-size: 14px; 
+}
+
+.hinweis {
+    font-size: 12px;
+    color:#993556;
+    margin: 4px 0 0; /* KI-Log Nr. 16 */
+}
+
+
+/*KI-Log Nr. 18*/
+.passwort-feld {
+    position: relative;
+    display: inline-block;
+}
+
+/*KI-Log Nr. 18*/
+.passwort-feld input {
+    padding-right: 32px;
+}
+
+/*KI-Log Nr. 18*/
+.toggle-password {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0;
+    padding: 2px 4px;
+    background: none;
+    color: #993556;
+    font-size: 16px;
+}
+
+/*KI-Log Nr. 18*/
+.toggle-password img {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+/*KI-Log Nr. 20*/
+.login-box label, .register-box label {
+    display: inline-block;
+    width: 90px;
+}
+
+.login-box input, .register-box input {
+    width: 200px;
+}

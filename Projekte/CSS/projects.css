@@ -1,0 +1,243 @@
+/* =====================================================================
+   Plan B - Bereich "Projekte"
+   Gemeinsames Stylesheet fuer projects.html, project.html, task-manage.html
+   KI-Log Nr. 38: Layout, Farben und Abstaende nach Wireframes (Graustufen)
+   ===================================================================== */
+
+/* Lokale Systemschrift: kein externer Font-Request erforderlich. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+  --ink: #1f1f1f;
+  --muted: #5f5f5f;
+  --line: #c4c4c4;
+  --line-soft: #e3e3e3;
+  --border: #9e9e9e;
+  --head: #f0f0f0;
+  --soft: #f6f6f6;
+  --black: #222;
+  --blue: #1a73e8;
+  --error: #b3261e;
+  --radius: 6px;
+  --font: Arial, Helvetica, sans-serif;
+}
+
+html, body { margin: 0; }
+body { font-family: var(--font); font-size: 15px; line-height: 1.4; color: var(--ink); background: #fff; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: inherit; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* KI-Log Nr. 38 | ---------- Kopfzeile / Navigation ---------- */
+.topbar { display: flex; align-items: center; gap: 28px; height: 72px; padding: 0 24px; border-bottom: 2px solid var(--black); }
+.logo { display: grid; place-items: center; flex: none; width: 46px; height: 46px; border: 2px solid var(--black); border-radius: var(--radius); }
+.logo svg { width: 20px; height: 20px; }
+.nav { display: flex; align-items: center; gap: 6px; }
+.nav a { padding: 9px 14px; border: 2px solid transparent; border-radius: var(--radius); font-size: 16px; text-decoration: none; white-space: nowrap; }
+.nav a:hover { border-color: var(--line); }
+.nav a[aria-current="page"] { border-color: var(--black); font-weight: 600; }
+.badge { display: inline-block; min-width: 32px; margin-left: 4px; padding: 0 8px; border-radius: 999px; background: var(--black); color: #fff; font-size: 12px; line-height: 18px; text-align: center; vertical-align: 2px; }
+.user-area { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+.user-name { color: var(--muted); font-size: 14px; white-space: nowrap; }
+
+/* ---------- Buttons ---------- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; font-size: 15px; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.btn:hover { background: var(--soft); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn svg { width: 16px; height: 16px; }
+.btn-primary { border-color: var(--black); background: var(--black); color: #fff; font-weight: 600; }
+.btn-primary:hover { background: #3a3a3a; }
+.btn-lg { min-height: 46px; padding: 10px 20px; font-size: 17px; }
+.btn-dashed { border: 2px dashed #555; font-weight: 600; }
+.btn-strong { border: 2px solid var(--black); font-weight: 600; }
+.btn-sm { min-height: 32px; padding: 4px 12px; font-size: 13px; }
+.btn-block { width: 100%; }
+.icon-btn { display: inline-grid; place-items: center; flex: none; width: 44px; height: 44px; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; cursor: pointer; }
+.icon-btn:hover { background: var(--soft); }
+.icon-btn svg { width: 18px; height: 18px; }
+.link-btn { padding: 0; border: 0; background: none; font-weight: 600; text-align: left; text-decoration: underline; cursor: pointer; }
+.link-btn.light { font-weight: 400; }
+
+/* ---------- Pills ---------- */
+.pill { display: inline-block; padding: 0 12px; border: 1px solid var(--black); border-radius: 999px; background: #fff; font-size: 13px; line-height: 22px; white-space: nowrap; }
+
+/* ---------- Seite ---------- */
+.page { padding: 28px 24px 64px; }
+.back-link { font-size: 14px; color: var(--muted); }
+.page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-top: 22px; }
+.title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
+h1 { margin: 0; font-size: 30px; font-weight: 600; line-height: 1.2; }
+h2 { margin: 0; font-size: 18px; font-weight: 600; }
+.role-text { font-size: 14px; color: var(--muted); }
+.description { margin: 10px 0 0; color: var(--muted); }
+.head-actions { display: flex; gap: 10px; }
+.layout { display: grid; grid-template-columns: 286px minmax(0, 1fr); gap: 30px; align-items: start; margin-top: 28px; }
+.page-message { max-width: 640px; margin-top: 24px; padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--soft); }
+.loading { color: var(--muted); }
+
+/* KI-Log Nr. 38 | ---------- Karten ---------- */
+.card { border: 1px solid var(--line); border-radius: var(--radius); background: #fff; }
+.members-card { padding: 18px; }
+.card-head { display: flex; justify-content: space-between; align-items: center; min-height: 44px; margin-bottom: 12px; }
+.member-names { margin: 0; padding: 0; list-style: none; }
+.member-names li { padding: 5px 0; }
+.member-names .pl { color: var(--muted); }
+
+/* Meine Projekte (Projektkarten) */
+.projects-col { width: 300px; max-width: 100%; }
+.projects-col > h1 { margin-bottom: 16px; font-size: 22px; }
+.project-card { display: block; margin-bottom: 12px; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); text-decoration: none; }
+.project-card:hover { border-color: #777; }
+.project-card.is-closed { background: #efefef; }
+.project-card .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.project-card h3 { margin: 0; font-size: 18px; font-weight: 600; }
+.project-card p { margin: 0; color: var(--muted); font-size: 14px; }
+
+/* KI-Log Nr. 38 | ---------- Tabellen ---------- */
+.section-head { display: flex; justify-content: space-between; align-items: center; min-height: 58px; margin-bottom: 14px; }
+.section-head.compact { min-height: 0; margin-bottom: 12px; }
+.table-wrap { overflow-x: auto; border: 1px solid #a9a9a9; border-radius: var(--radius); }
+table.data { width: 100%; border-collapse: collapse; }
+.data th { padding: 14px 16px; border-bottom: 1px solid #bdbdbd; background: var(--head); font-weight: 600; text-align: left; white-space: nowrap; }
+.data td { padding: 12px 16px; border-top: 1px solid var(--line-soft); vertical-align: middle; }
+.data tbody tr:first-child td { border-top: 0; }
+.data .cell-auto { font-size: 13px; color: var(--muted); }
+.data .empty-row td { padding: 22px 16px; color: var(--muted); }
+.data strong { font-weight: 600; }
+.row-sub td { background: var(--soft); color: var(--muted); font-size: 14px; }
+.row-sub .sub-title { padding-left: 22px; }
+.title-cell { display: flex; align-items: center; }
+.toggle { display: inline-grid; place-items: center; flex: none; width: 26px; height: 26px; margin-right: 10px; border: 1px solid var(--border); border-radius: 4px; background: #fff; font-size: 10px; cursor: pointer; }
+.actions { display: flex; gap: 12px; }
+.muted { color: var(--muted); }
+
+input[type="checkbox"] { width: 24px; height: 24px; margin: 0; accent-color: var(--blue); cursor: pointer; }
+input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .55; }
+
+.progress { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.bar { flex: none; width: 46px; height: 8px; overflow: hidden; border: 1px solid #555; border-radius: 999px; }
+.bar.wide { width: 110px; }
+.bar span { display: block; height: 100%; background: #555; }
+
+/* Erledigt-Liste */
+.done-title { margin: 40px 0 12px; font-size: 18px; font-weight: 600; color: var(--muted); }
+.done-list { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: var(--radius); background: var(--soft); }
+.done-list li { display: flex; align-items: center; gap: 18px; padding: 16px 20px; border-top: 1px solid var(--line-soft); color: var(--muted); }
+.done-list li:first-child { border-top: 0; }
+.strike { text-decoration: line-through; }
+
+/* KI-Log Nr. 38 | ---------- Modal ---------- */
+.modal-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px; overflow-y: auto; background: rgba(0, 0, 0, .35); }
+.modal { display: flex; flex-direction: column; width: 100%; max-width: 600px; max-height: calc(100vh - 40px); border: 2px solid var(--black); border-radius: 8px; background: #fff; }
+.modal-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 22px 26px; border-bottom: 1px solid #bdbdbd; }
+.modal-head h2 { font-size: 20px; }
+.modal-close { padding: 4px; border: 0; background: none; font-size: 26px; line-height: 1; cursor: pointer; }
+.modal-body { flex: 1; overflow-y: auto; padding: 22px 26px; }
+.modal-foot { display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding: 18px 26px; border-top: 1px solid var(--line-soft); }
+.modal-foot.no-border { border-top: 0; }
+.modal-foot .left { margin-right: auto; }
+.modal-foot .hint { margin-right: auto; font-size: 13px; color: var(--muted); }
+
+/* KI-Log Nr. 38 | ---------- Formulare ---------- */
+.field { margin-bottom: 18px; }
+.label, .field > label { display: block; margin-bottom: 8px; font-size: 15px; font-weight: 600; }
+.input, .select, .textarea { width: 100%; min-height: 52px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; font-size: 16px; }
+.select { padding-right: 10px; }
+.textarea { min-height: 100px; resize: vertical; }
+.textarea.small { min-height: 60px; font-size: 14px; }
+.input::placeholder, .textarea::placeholder { color: #9a9a9a; }
+.input:focus, .select:focus, .textarea:focus { border-color: var(--blue); outline: 2px solid var(--blue); outline-offset: 0; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.form-hint { margin: 0; font-size: 14px; color: var(--muted); }
+.form-error { margin-bottom: 16px; padding: 10px 14px; border: 1px solid var(--error); border-radius: var(--radius); background: #fdf1f0; color: var(--error); font-size: 14px; }
+.notice { margin-bottom: 18px; padding: 14px 16px; border: 2px solid var(--black); border-radius: var(--radius); }
+.fieldset { margin: 0 0 18px; padding: 10px 24px 14px; border: 1px solid var(--border); border-radius: var(--radius); }
+.fieldset legend { padding: 0 6px; font-weight: 600; }
+.fieldset.dashed { padding: 10px 18px 18px; border-style: dashed; }
+.radio { display: flex; align-items: center; gap: 16px; padding: 12px 0; cursor: pointer; }
+.radio input { width: 24px; height: 24px; margin: 0; accent-color: var(--blue); }
+
+/* Umschalter Meeting / Langes To-Do */
+.segmented { display: inline-flex; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius); }
+.segmented button { min-height: 52px; padding: 0 22px; border: 0; background: #fff; font-size: 16px; cursor: pointer; }
+.segmented button + button { border-left: 1px solid var(--border); }
+.segmented button[aria-pressed="true"] { background: var(--black); color: #fff; font-weight: 600; }
+
+/* Teilnehmer-Chips */
+.chip-input { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 52px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 10px; border: 1px solid #555; border-radius: 999px; font-size: 14px; }
+.chip button { padding: 0 2px; border: 0; background: none; font-size: 14px; cursor: pointer; }
+.chip-select { flex: 1; min-width: 130px; padding: 4px; border: 0; background: transparent; font-size: 16px; cursor: pointer; }
+
+/* Verfuegbarkeit */
+.dashed-box { padding: 18px; border: 1px dashed #777; border-radius: var(--radius); }
+.box-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; font-weight: 600; }
+.availability-row { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; }
+.availability-row .conflict { font-weight: 600; }
+
+/* Mitglieder im Modal */
+.member-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 10px 10px 10px 16px; border: 1px solid var(--line); border-radius: var(--radius); }
+.member-item.pending { border-style: dashed; }
+.member-item .info { flex: 1; min-width: 0; }
+.member-item strong { display: block; font-size: 16px; font-weight: 600; }
+.member-item small { color: var(--muted); font-size: 14px; }
+.subheading { margin: 18px 0 10px; font-size: 15px; font-weight: 600; color: var(--muted); }
+.empty { margin: 6px 0 12px; color: var(--muted); font-size: 14px; }
+
+/* Detailansichten (Langes To-Do / Teilaufgabe) */
+.detail-label { margin-bottom: 2px; font-size: 14px; color: var(--muted); }
+.detail-value { margin-bottom: 14px; font-size: 16px; }
+.detail-value.title { font-size: 20px; font-weight: 600; }
+.detail-value.strong { font-weight: 600; }
+.detail-desc { margin-bottom: 12px; padding: 10px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--soft); color: var(--muted); }
+.subtasks-head { display: flex; justify-content: space-between; align-items: center; margin: 8px 0 10px; }
+.subtask-item { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius); }
+.subtask-item.is-done { background: var(--soft); }
+.subtask-item .info { flex: 1; min-width: 0; }
+.subtask-item small { display: block; color: var(--muted); font-size: 13px; }
+.checkbox-spacer { flex: none; width: 24px; }
+
+/* Teilaufgaben-Editor (Task bearbeiten) */
+.subtask-editor { margin-bottom: 12px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); }
+.subtask-editor .row { display: flex; gap: 10px; margin-bottom: 8px; }
+.subtask-editor .meta { font-size: 14px; color: var(--muted); }
+
+/* ---------- Toast ---------- */
+.toast { position: fixed; right: 24px; bottom: 24px; z-index: 100; max-width: 380px; padding: 12px 16px; border-radius: var(--radius); background: var(--black); color: #fff; opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .2s, transform .2s; }
+.toast.show { opacity: 1; transform: none; }
+.toast.error { background: var(--error); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 960px) {
+  .layout { grid-template-columns: 1fr; }
+  .page-head { flex-direction: column; }
+}
+@media (max-width: 720px) {
+  .topbar { gap: 10px; padding: 0 12px; overflow-x: auto; }
+  .nav a { padding: 7px 9px; font-size: 14px; }
+  .user-name { display: none; }
+  .page { padding: 20px 14px 48px; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .head-actions { flex-wrap: wrap; }
+  .modal-head, .modal-body, .modal-foot { padding-left: 18px; padding-right: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+/* Feinschliff: Ueberschriften im Modal und Fortschritt nicht umbrechen */
+.modal-head h2 { flex: 1; }
+.progress { white-space: nowrap; }
+.head-actions { flex-wrap: nowrap; }
+
+
+/* Einplanung einer Teilaufgabe (Wireframe S. 15) */
+.slot-list { display: grid; gap: 8px; margin: 12px 0 16px; }
+.slot-option { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; }
+.slot-option:hover { background: var(--soft); }
+.slot-option input { width: 20px; height: 20px; accent-color: var(--blue); }
+.slot-option strong { font-weight: 600; }
+.schedule-form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 16px; }
+@media (max-width: 720px) { .schedule-form { grid-template-columns: 1fr; } }

@@ -1,0 +1,63 @@
+/*KI-Log Nr. 23*/
+* { 
+    box-sizing: border-box; 
+}
+
+body { 
+    font-family: sans-serif; 
+    margin: 0; 
+    padding: 16px; 
+}
+ 
+button { 
+    padding: 8px 14px; 
+    border: 1px solid #c2185b; 
+    border-radius: 6px;
+    background: #fff; 
+    color: #c2185b; 
+    cursor: pointer; 
+}
+
+button[type="submit"], #btn-neues-projekt { 
+    background: #c2185b; 
+    color: #fff; 
+}
+
+button:disabled { 
+opacity: 0.5; 
+cursor: wait; 
+}
+ 
+dialog { 
+width: min(90vw, 420px); 
+border: 1px solid #c2185b; 
+border-radius: 8px; 
+}
+
+label { 
+display: block; 
+margin-top: 12px; 
+}
+
+input, textarea { 
+width: 100%; 
+padding: 6px; 
+margin-top: 4px; 
+}
+ 
+.aktionen { 
+display: flex; 
+justify-content: flex-end; 
+gap: 8px; 
+margin-top: 16px; 
+}
+
+.fehler { 
+color: #b00020; 
+min-height: 1em; 
+}
+ 
+#projekt-ansicht { 
+margin-top: 24px; 
+max-width: 600px; 
+}

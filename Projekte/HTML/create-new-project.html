@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="../CSS/create-new-project.css">
+</head>
+<body>
+    <!--KI-Log Nr. 23-->
+    <button id="btn-neues-projekt" type="button">+ Neues Projekt anlegen</button>
+    <p id="meldung" class="fehler" role="status"></p>
+
+
+  <dialog id="dialog-projekt">
+    <form id="form-projekt">
+      <h2>Neues Projekt anlegen</h2>
+ 
+      <label for="input-titel">Titel *</label>
+      <input id="input-titel" type="text" maxlength="100" required>
+ 
+      <label for="input-beschreibung">Beschreibung</label>
+      <textarea id="input-beschreibung" rows="4"></textarea>
+ 
+      <p id="fehler" class="fehler" role="alert"></p>
+ 
+      <div class="aktionen">
+        <button type="button" id="btn-abbrechen">Abbrechen</button>
+        <button type="submit" id="btn-speichern">Projekt erstellen</button>
+      </div>
+    </form>
+  </dialog>
+ 
+
+  <section id="projekt-ansicht" hidden>
+    <h2 id="projekt-titel"></h2>
+    <p id="projekt-beschreibung"></p>
+    <p>Status: <span id="projekt-status"></span></p>
+    <h3>Mitglieder</h3>
+    <ul id="projekt-mitglieder"></ul>
+  </section>
+ 
+  <script src="../JS/create-new-project.js"></script>
+</body>
+</html>

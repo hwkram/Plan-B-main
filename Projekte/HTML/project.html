@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projekt · Plan B</title>
+  <link rel="stylesheet" href="../CSS/projects.css">
+</head>
+<body>
+  <!-- Kopfzeile wie in den Wireframes (KI-Log Nr. 38) -->
+  <header class="topbar">
+    <a class="logo" href="../../Home/HTML/index.html" aria-label="Plan B Startseite">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 22V3h11l-3 4 3 4H6"/></svg>
+    </a>
+    <nav class="nav" aria-label="Hauptnavigation">
+      <a href="../../Home/HTML/index.html">Home</a>
+      <a href="projects.html" aria-current="page">Projekte</a>
+      <a href="../../Benutzer/HTML/user.html">Benutzer</a>
+      <a href="../../Kalender/HTML/calender.html">Kalender</a>
+      <!-- Pfad anpassen, sobald die Einladungsseite existiert -->
+      <a href="../../Einladungen/HTML/invitations.html">Einladungen <span class="badge" id="invitationBadge" hidden></span></a>
+    </nav>
+    <div class="user-area">
+      <span class="user-name" id="currentUserName"></span>
+      <button class="btn" type="button" id="logoutButton">Abmelden</button>
+    </div>
+  </header>
+
+  <!-- KI-Log Nr. 32: Projektansicht (Wireframe S. 3 Teammitglied, S. 4 Projektleitung) -->
+  <main class="page">
+    <a class="back-link" href="projects.html">← Meine Projekte</a>
+
+    <div id="pageMessage" class="page-message" role="alert" hidden></div>
+
+    <div id="projectView" hidden>
+      <div class="page-head">
+        <div>
+          <div class="title-row">
+            <h1 id="projectTitle"></h1>
+            <span class="pill" id="projectStatus"></span>
+            <span class="role-text" id="projectRole"></span>
+          </div>
+          <p class="description" id="projectDescription"></p>
+        </div>
+        <!-- Nur für Projektleitung sichtbar -->
+        <div class="head-actions" id="leadActions" hidden>
+          <button class="btn btn-lg" type="button" id="editProjectButton">Projekt bearbeiten</button>
+          <a class="btn btn-primary btn-lg" id="manageTasksLink" href="task-manage.html">Task verwalten</a>
+        </div>
+      </div>
+
+      <div class="layout">
+        <!-- Mitglieder-Karte -->
+        <aside class="card members-card" aria-labelledby="membersHeading">
+          <div class="card-head">
+            <h2 id="membersHeading">Mitglieder</h2>
+            <button class="icon-btn" type="button" id="openMembersButton" aria-label="Mitglieder verwalten" title="Mitglieder verwalten" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>
+            </button>
+          </div>
+          <ul class="member-names" id="memberNames"></ul>
+        </aside>
+
+        <!-- To-Do's -->
+        <section aria-labelledby="todosHeading">
+          <div class="section-head">
+            <h2 id="todosHeading">To-Do's</h2>
+            <button class="btn btn-dashed" type="button" id="newTaskButton" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              Task anlegen
+            </button>
+          </div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead id="taskHead"></thead>
+              <tbody id="taskBody"></tbody>
+            </table>
+          </div>
+
+          <h2 class="done-title" id="doneTitle">Erledigt (0)</h2>
+          <ul class="done-list" id="doneList"></ul>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- KI-Log Nr. 33: Mitglieder · Projekt (Wireframe S. 7) -->
+  <div class="modal-backdrop" id="membersModal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="membersModalTitle">
+      <div class="modal-head">
+        <h2 id="membersModalTitle">Mitglieder</h2>
+        <button class="modal-close" type="button" data-close aria-label="Schließen">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="memberItems"></div>
+        <h3 class="subheading">Ausstehende Einladungen</h3>
+        <div id="invitationItems"></div>
+      </div>
+      <div class="modal-foot no-border">
+        <button class="btn btn-dashed btn-lg btn-block" type="button" id="openInviteButton">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Mitglied einladen
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- KI-Log Nr. 33: Mitglied einladen (Wireframe S. 8) -->
+  <div class="modal-backdrop" id="inviteModal" hidden>
+    <form class="modal" id="inviteForm" role="dialog" aria-modal="true" aria-labelledby="inviteTitle" novalidate>
+      <div class="modal-head">
+        <h2 id="inviteTitle">Mitglied einladen</h2>
+        <button class="modal-close" type="button" data-close aria-label="Schließen">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="inviteEmail">E-Mail-Adresse *</label>
+          <input class="input" id="inviteEmail" name="email" type="email" placeholder="name@beispiel.de" autocomplete="email" required autofocus>
+        </div>
+        <fieldset class="fieldset">
+          <legend>Rolle *</legend>
+          <label class="radio"><input type="radio" name="role" value="TEAMMITGLIED" checked> Teammitglied</label>
+          <label class="radio"><input type="radio" name="role" value="PROJEKTLEITUNG"> Projektleitung</label>
+        </fieldset>
+        <p class="form-hint">Die Person erhält eine Einladung und wird erst Mitglied, wenn sie annimmt. Den Status siehst du unter „Einladungen → Gesendet“.</p>
+      </div>
+      <div class="modal-foot no-border">
+        <button class="btn btn-lg" type="button" data-close>Abbrechen</button>
+        <button class="btn btn-primary btn-lg" type="submit" id="inviteSubmit">Einladung senden</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- KI-Log Nr. 33: Rolle ändern (Stift in der Mitgliederliste) -->
+  <div class="modal-backdrop" id="roleModal" hidden>
+    <form class="modal" id="roleForm" role="dialog" aria-modal="true" aria-labelledby="roleTitle" novalidate>
+      <div class="modal-head">
+        <h2 id="roleTitle">Rolle ändern</h2>
+        <button class="modal-close" type="button" data-close aria-label="Schließen">×</button>
+      </div>
+      <div class="modal-body">
+        <fieldset class="fieldset">
+          <legend>Rolle *</legend>
+          <label class="radio"><input type="radio" name="role" value="TEAMMITGLIED"> Teammitglied</label>
+          <label class="radio"><input type="radio" name="role" value="PROJEKTLEITUNG"> Projektleitung</label>
+        </fieldset>
+      </div>
+      <div class="modal-foot no-border">
+        <button class="btn btn-lg" type="button" data-close>Abbrechen</button>
+        <button class="btn btn-primary btn-lg" type="submit" id="roleSubmit">Speichern</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- KI-Log Nr. 32: Projekt bearbeiten (gleiches Layout wie "Neues Projekt anlegen") -->
+  <div class="modal-backdrop" id="editProjectModal" hidden>
+    <form class="modal" id="editProjectForm" role="dialog" aria-modal="true" aria-labelledby="editProjectTitle" novalidate>
+      <div class="modal-head">
+        <h2 id="editProjectTitle">Projekt bearbeiten</h2>
+        <button class="modal-close" type="button" data-close aria-label="Schließen">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="editTitle">Titel *</label>
+          <input class="input" id="editTitle" name="title" type="text" maxlength="100" required autofocus>
+        </div>
+        <div class="field">
+          <label for="editDescription">Beschreibung</label>
+          <textarea class="textarea" id="editDescription" name="description" maxlength="500"></textarea>
+        </div>
+        <div class="field">
+          <label for="editStatus">Status</label>
+          <select class="select" id="editStatus" name="status">
+            <option value="AKTIV">Aktiv</option>
+            <option value="ABGESCHLOSSEN">Abgeschlossen</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot no-border">
+        <button class="btn btn-lg" type="button" data-close>Abbrechen</button>
+        <button class="btn btn-primary btn-lg" type="submit" id="editProjectSubmit">Speichern</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- KI-Log Nr. 34: Neue Aufgabe (Wireframe S. 11) -->
+  <div class="modal-backdrop" id="newTaskModal" hidden>
+    <form class="modal" id="newTaskForm" role="dialog" aria-modal="true" aria-labelledby="newTaskTitle" novalidate>
+      <div class="modal-head">
+        <h2 id="newTaskTitle">Neue Aufgabe</h2>
+        <button class="modal-close" type="button" data-close aria-label="Schließen">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <span class="label" id="typeLabel">Typ *</span>
+          <div class="segmented" role="group" aria-labelledby="typeLabel">
+            <button type="button" data-type="MEETING" aria-pressed="true">Meeting</button>
+            <button type="button" data-type="LANGES_TODO" aria-pressed="false">Langes To-Do</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="taskTitle">Titel *</label>
+          <input class="input" id="taskTitle" name="title" type="text" placeholder="z. B. Sprint Review" maxlength="120" required>
+        </div>
+        <div class="field">
+          <label for="taskDescription">Beschreibung</label>
+          <textarea class="textarea" id="taskDescription" name="description" maxlength="1000"></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="taskStart" id="taskStartLabel">Start *</label>
+            <!-- KI-Log Nr. 45: Native HTML-Datum/Uhrzeit mit Browser-Icon. -->
+            <input class="input" id="taskStart" name="start" type="datetime-local" step="900">
+          </div>
+          <div class="field">
+            <label for="taskEnd" id="taskEndLabel">Ende *</label>
+            <!-- KI-Log Nr. 45: Native HTML-Datum/Uhrzeit mit Browser-Icon. -->
+            <input class="input" id="taskEnd" name="end" type="datetime-local" step="900" required>
+          </div>
+          <div class="field">
+            <span class="label">Teilnehmer</span>
+            <div id="newTaskParticipants"></div>
+          </div>
+          <div class="field">
+            <label for="taskPriority">Priorität *</label>
+            <select class="select" id="taskPriority" name="priority">
+              <option value="HOCH">Hoch</option>
+              <option value="MITTEL" selected>Mittel</option>
+              <option value="NIEDRIG">Niedrig</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- nur bei Meeting -->
+        <div class="dashed-box" id="availabilityBox">
+          <div class="box-head">
+            <span>Verfügbarkeit der Teilnehmer</span>
+            <button class="btn" type="button" id="checkAvailabilityButton">Zeit prüfen</button>
+          </div>
+          <div id="availabilityRows"></div>
+        </div>
+
+        <!-- nur bei Langes To-Do -->
+        <fieldset class="fieldset dashed" id="newSubtaskSection" hidden>
+          <legend>Teilaufgaben (nur bei langem To-Do)</legend>
+          <p class="form-hint" style="margin-bottom:12px">Alle Teilaufgaben haben die Frist des langen To-Dos. Nur Teilnehmer können sie übernehmen.</p>
+          <div id="newSubtasks"></div>
+          <button class="btn btn-dashed" type="button" id="addNewSubtaskButton">+ Teilaufgabe hinzufügen</button>
+        </fieldset>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-lg" type="button" data-close>Abbrechen</button>
+        <button class="btn btn-primary btn-lg" type="submit" id="newTaskSubmit">Anlegen</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- KI-Log Nr. 35: Langes To-Do / Meeting Detail (Wireframe S. 9) -->
+  <div class="modal-backdrop" id="taskDetailModal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="taskDetailHeading">
+      <div class="modal-head">
+        <h2 id="taskDetailHeading">Langes To-Do</h2>
+        <button class="modal-close" type="button" data-close aria-label="Schließen">×</button>
+      </div>
+      <div class="modal-body" id="taskDetailBody"></div>
+      <div class="modal-foot">
+        <span class="hint" id="taskDetailHint"></span>
+        <button class="btn btn-lg" type="button" data-close>Schließen</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- KI-Log Nr. 35: Teilaufgabe (Wireframe S. 13) + Konflikt "Nicht übernommen" (S. 14) -->
+  <div class="modal-backdrop" id="subtaskModal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="subtaskHeading">
+      <div class="modal-head">
+        <h2 id="subtaskHeading">Teilaufgabe</h2>
+        <button class="modal-close" type="button" data-close aria-label="Schließen">×</button>
+      </div>
+      <div class="modal-body" id="subtaskBody"></div>
+      <div class="modal-foot" id="subtaskFoot"></div>
+    </section>
+  </div>
+
+  <!-- KI-Log Nr. 39: Teilaufgabe einplanen (Wireframe S. 15) -->
+  <div class="modal-backdrop" id="scheduleModal" hidden>
+    <form class="modal" id="scheduleForm" role="dialog" aria-modal="true" aria-labelledby="scheduleHeading" novalidate>
+      <div class="modal-head">
+        <h2 id="scheduleHeading">Teilaufgabe einplanen</h2>
+        <button class="modal-close" type="button" data-close aria-label="Schließen">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-value title" id="scheduleTaskTitle"></div>
+        <div class="detail-value" id="scheduleTaskMeta"></div>
+        <div class="field">
+          <label for="scheduleDate">Datum *</label>
+          <input class="input" id="scheduleDate" name="date" type="date" required>
+        </div>
+        <div class="schedule-form">
+          <div class="field"><label for="scheduleFrom">Von *</label><input class="input" id="scheduleFrom" name="from" type="time" required></div>
+          <div class="field"><label for="scheduleTo">Bis *</label><input class="input" id="scheduleTo" name="to" type="time" required></div>
+        </div>
+        <h3 style="margin:18px 0 4px;font-size:16px">Freie Zeitfenster bis zur Frist</h3>
+        <div id="freeSlotList" class="slot-list"><p class="empty">Freie Zeiten werden geladen …</p></div>
+        <p class="form-hint">Belegte Zeiten aus deinem Kalender sind berücksichtigt. Eingeplante Zeitfenster siehst nur du.</p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-lg" type="button" data-close>Abbrechen</button>
+        <button class="btn btn-primary btn-lg" type="submit" id="scheduleSubmit">Einplanen</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="../JS/api.js"></script>
+  <script src="../JS/ui.js"></script>
+  <script src="../JS/project.js"></script>
+</body>
+</html>

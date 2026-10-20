@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrierung</title>
+    <link rel="stylesheet" href="../CSS/login-register.css">
+</head>
+
+<body>
+    <main class="register-box">
+    <h1>Konto erstellen</h1>
+    <p id="error-message" class="error" hidden></p>
+
+    <p>Erstelle dein Konto für alle deine Projekte</p> <br><br>
+
+    <label for="first-name-input">Vorname:</label> <input type="text" id="first-name-input"/><br><br><!--KI Log Nr. 20-->
+    <label for="last-name-input">Nachname:</label> <input type="text" id="last-name-input"/><br><br><!--KI Log Nr. 20-->
+    <label for="email-input">E-Mail:</label> <input type="email" id="email-input"/><br><br><!--KI Log Nr. 20-->
+    <label for="password-input">Passwort:</label><!--KI Log Nr. 20-->
+    <div class="passwort-feld"> <!--KI Log Nr. 18-->
+            <input type="password" id="password-input">
+            <button type="button" class="toggle-password" aria-label="Passwort anzeigen">
+                <img src="../../icons/eye.svg" alt="">
+            </button>
+        </div>
+
+    <p class= "hinweis">Mindestens 8 Zeichen </p><br><br>
+    
+    <button type="button" id="register">Registrieren</button><br><br>
+    Schon registriert? <a href="login.html">Anmelden</a>
+
+    </main>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="../JS/passwort-toggle.js"></script> <!--KI-Log Nr. 18-->
+<script src="../JS/register.js"></script>
+</body>
+</html>
