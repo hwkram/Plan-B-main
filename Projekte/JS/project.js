@@ -373,8 +373,8 @@
     const checked = checkbox.checked;
     checkbox.disabled = true;
     try {
-      // BACKEND: PATCH /tasks/{taskId}  { done }
-      await api.setTaskDone(checkbox.dataset.task, checked);
+      // BACKEND: PUT /projects/{projectId}/tasks/{taskId}/status
+      await api.setTaskDone(projectId, checkbox.dataset.task, checked);
       ui.toast(checked ? 'Als erledigt markiert.' : 'Wieder geöffnet.');
       await refresh();
     } catch (error) {

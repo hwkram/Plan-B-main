@@ -25,14 +25,14 @@
 
   // KI-Log Nr. 41: API-URL wie im vorhandenen Mia-Projekt als Konfiguration.
   // BACKEND: Diese Basis-URL auf den erreichbaren Server setzen.
-  const API_BASE = 'http://localhost:8080';
+  const API_BASE = 'https://plan-b-api-6486e78ed17c.herokuapp.com';
 
   // KI-Log Nr. 43: Echte Requests an den Backend-Port verwenden.
-  const USE_MOCK = true;
+  const USE_MOCK = false;
 
   // KI-Log Nr. 44: Nur für die lokale Entwicklung ohne Login.
   // Vor dem echten Betrieb unbedingt auf false setzen.
-  const DEV_BYPASS_AUTH = true;
+  const DEV_BYPASS_AUTH = false;
 
   // KI-Log Nr. 42: Login und API verwenden sessionStorage mit demselben Schlüssel.
   const TOKEN_KEY = 'token';
@@ -295,7 +295,10 @@
     // Ersteller wird im Backend automatisch PROJEKTLEITUNG.
     async createProject(data) {
       if (USE_MOCK) return mock.createProject(data);
-      const raw = await request('POST', '/projects', data);
+      const raw = await request('POST', '/projects', {
+        name: data.name || data.title,
+        description: data.description || ''
+      });
       const result = (raw && (raw.project || raw.data)) || raw || {};
       return { ...result, id: String(result.id ?? result.projectId ?? raw.projectId ?? '') };
     },
@@ -312,7 +315,7 @@
     // BACKEND: PATCH /projects/{projectId}  Body { title, description, status } -> 200 Projekt
     async updateProject(projectId, data) {
       if (USE_MOCK) return mock.updateProject(projectId, data);
-      const raw = await request('PATCH', '/projects/' + encodeURIComponent(projectId), data);
+      const raw = await request('PUT', '/projects/' + encodeURIComponent(projectId), { update: data });
       return normalizeProject(raw);
     },
 
@@ -323,8 +326,8 @@
     updateMemberRole(projectId, userId, role) {
       if (USE_MOCK) return mock.updateMemberRole(projectId, userId, role);
       // BACKEND: Mia-Projekt nutzt PL/member als Rollenwerte; bei abweichendem Enum nur diese Abbildung ändern.
-      const apiRole = role === 'PROJEKTLEITUNG' ? 'PL' : 'member';
-      return request('PATCH', '/projects/' + encodeURIComponent(projectId) + '/members/' + encodeURIComponent(userId), { role: apiRole });
+      const apiRole = role === 'PROJEKTLEITUNG' ? 'leader' : 'member';
+      return request('PUT', '/projects/' + encodeURIComponent(projectId) + '/members/' + encodeURIComponent(userId), { role: apiRole });
     },
 
     // BACKEND: DELETE /projects/{projectId}/members/{userId} -> 204
@@ -347,10 +350,10 @@
     inviteMember(projectId, data) {
       const payload = {
         email: String(data.email || '').trim().toLowerCase(),
-        role: data.role === 'PROJEKTLEITUNG' ? 'PL' : 'member'
+        role: data.role === 'PROJEKTLEITUNG' ? 'leader' : 'member'
       };
       if (USE_MOCK) return mock.inviteMember(projectId, data);
-      return request('POST', '/projects/' + encodeURIComponent(projectId) + '/invitations', payload);
+      return request('POST', '/projects/' + encodeURIComponent(projectId) + '/members', payload);
     },
 
     // BACKEND: DELETE /projects/{projectId}/invitations/{invitationId} -> 204 (Zurueckziehen)
@@ -416,22 +419,22 @@
 
     // BACKEND: PUT /tasks/{taskId}  Body = kompletter Task inkl. subtasks -> 200 Task
     // Neue Teilaufgaben haben id = null, das Backend vergibt die IDs.
-    async updateTask(taskId, data) {
+    async updateTask(projectId, taskId, data) {
       if (USE_MOCK) return mock.updateTask(taskId, data);
-      const raw = await request('PUT', '/tasks/' + encodeURIComponent(taskId), data);
+      const raw = await request('PUT', '/projects/' + encodeURIComponent(projectId) + '/tasks/' + encodeURIComponent(taskId), { update: data });
       return normalizeTask((raw && raw.task) || raw);
     },
 
-    // BACKEND: DELETE /tasks/{taskId} -> 204
-    deleteTask(taskId) {
+    // BACKEND: DELETE /projects/{projectId}/tasks/{taskId} -> 200
+    deleteTask(projectId, taskId) {
       if (USE_MOCK) return mock.deleteTask(taskId);
-      return request('DELETE', '/tasks/' + encodeURIComponent(taskId));
+      return request('DELETE', '/projects/' + encodeURIComponent(projectId) + '/tasks/' + encodeURIComponent(taskId));
     },
 
-    // BACKEND: PATCH /tasks/{taskId}  Body { done } -> 200 Task  (nur Meetings, nur Teilnehmer)
-    async setTaskDone(taskId, done) {
+    // BACKEND: PUT /projects/{projectId}/tasks/{taskId}/status -> 200
+    async setTaskDone(projectId, taskId, done) {
       if (USE_MOCK) return mock.setTaskDone(taskId, done);
-      const raw = await request('PATCH', '/tasks/' + encodeURIComponent(taskId), { done });
+      const raw = await request('PUT', '/projects/' + encodeURIComponent(projectId) + '/tasks/' + encodeURIComponent(taskId) + '/status', { status: done ? 'done' : 'open' });
       return normalizeTask((raw && raw.task) || raw);
     },
 

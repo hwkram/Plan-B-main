@@ -1,8 +1,8 @@
 //KI-Log Nr. 23
 // KI-Log Nr. 46: Token wird bei geschützten Requests ausschließlich im Header übertragen.
 // KI-Log Nr. 44: Lokale Entwicklung kann ohne Login mit Mock-Daten laufen.
-const API_URL = "http://localhost:8080";
-const DEV_BYPASS_AUTH = true;
+const API_URL = "https://plan-b-api-6486e78ed17c.herokuapp.com";
+const DEV_BYPASS_AUTH = false;
  
 const dialog = document.getElementById("dialog-projekt");
 const form = document.getElementById("form-projekt");
@@ -66,7 +66,7 @@ form.addEventListener("submit", async (event) => {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + token
       },
-      body: JSON.stringify({ title, description })
+      body: JSON.stringify({ name: title, description })
     });
  
     if (response.status === 401) return zumLogin();
@@ -107,7 +107,7 @@ async function projektAnzeigen(projectId, token) {
     }
  
     
-    document.getElementById("projekt-titel").textContent = projekt.title;
+    document.getElementById("projekt-titel").textContent = projekt.title || projekt.name;
     document.getElementById("projekt-beschreibung").textContent = projekt.description || "";
     document.getElementById("projekt-status").textContent = STATUS[projekt.status] || projekt.status;
  

@@ -173,7 +173,7 @@
     await ui.withBusy($('#saveTaskButton'), async () => {
       try {
         // BACKEND: PUT /tasks/{taskId}  (kompletter Task inkl. Teilaufgaben; neue Teilaufgaben mit id = null)
-        await api.updateTask(state.editingId, data);
+        await api.updateTask(projectId, state.editingId, data);
         ui.closeModal('editTaskModal');
         ui.toast('Task gespeichert.');
         await reload();
@@ -190,7 +190,7 @@
     await ui.withBusy(button, async () => {
       try {
         // BACKEND: DELETE /tasks/{taskId}
-        await api.deleteTask(taskId);
+        await api.deleteTask(projectId, taskId);
         ui.closeModal('editTaskModal');
         ui.toast('Task gelöscht.');
         await reload();

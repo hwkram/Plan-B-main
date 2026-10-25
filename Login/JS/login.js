@@ -1,5 +1,5 @@
 const EMAIL_MUSTER = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; //KI-Log Nr. 6
-const API_URL = "http://localhost:8080"; //KI-Log Nr. 42: Zentrale Auth-URL.
+const API_URL = "https://plan-b-api-6486e78ed17c.herokuapp.com"; //KI-Log Nr. 42: Zentrale Auth-URL.
 
 $("#logon").click(function() {
     const email = $("#email-input").val().trim(); //KI-Log Nr. 9
