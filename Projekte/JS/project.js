@@ -425,19 +425,8 @@
 
   async function openMembers() {
     renderMemberItems();
-    $('#invitationItems').innerHTML = '<p class="empty">Einladungen werden geladen …</p>';
+    $('#invitationItems').innerHTML = '<p class="empty">Das Backend verwaltet direkte Projektmitglieder. Ausstehende Einladungen gibt es hier nicht.</p>';
     ui.openModal('membersModal');
-    await loadInvitations();
-  }
-
-  async function loadInvitations() {
-    try {
-      // BACKEND: GET /projects/{projectId}/invitations?status=AUSSTEHEND
-      state.invitations = await api.getInvitations(projectId);
-      renderInvitationItems();
-    } catch (error) {
-      $('#invitationItems').innerHTML = `<p class="empty">${esc(error.message)}</p>`;
-    }
   }
 
   function renderMemberItems() {
@@ -450,21 +439,6 @@
         </div>
         <button type="button" class="icon-btn" data-action="edit-member" data-user="${esc(m.userId)}" aria-label="Rolle von ${esc(m.name)} ändern" title="Rolle ändern">${ui.ICON.pencil}</button>
         <button type="button" class="icon-btn" data-action="remove-member" data-user="${esc(m.userId)}" aria-label="${esc(m.name)} entfernen" title="Aus Projekt entfernen">${ui.ICON.trash}</button>
-      </div>`).join('');
-  }
-
-  function renderInvitationItems() {
-    if (!state.invitations.length) {
-      $('#invitationItems').innerHTML = '<p class="empty">Keine ausstehenden Einladungen.</p>';
-      return;
-    }
-    $('#invitationItems').innerHTML = state.invitations.map(inv => `
-      <div class="member-item pending">
-        <div class="info">
-          <strong>${esc(inv.email)}</strong>
-          <small>${esc(ui.ROLE[inv.role])} · eingeladen am ${esc(ui.fmtDayMonth(inv.sentAt))} · ausstehend</small>
-        </div>
-        <button type="button" class="btn btn-lg" data-action="withdraw" data-invitation="${esc(inv.id)}">Zurückziehen</button>
       </div>`).join('');
   }
 
@@ -519,19 +493,6 @@
     });
   }
 
-  async function withdrawInvitation(button) {
-    await ui.withBusy(button, async () => {
-      try {
-        // BACKEND: DELETE /projects/{projectId}/invitations/{invitationId}
-        await api.withdrawInvitation(projectId, button.dataset.invitation);
-        ui.toast('Einladung zurückgezogen.');
-        await loadInvitations();
-      } catch (error) {
-        ui.toast(error.message, true);
-      }
-    });
-  }
-
   /* ================= Mitglied einladen (S. 8) ================= */
 
   function openInvite() {
@@ -554,12 +515,12 @@
     }
     await ui.withBusy($('#inviteSubmit'), async () => {
       try {
-        // KI-Log Nr. 46: Einladung sendet JSON { email, role }; Token liegt nur im Header.
-        // BACKEND: POST http://localhost:8080/projects/{projectId}/invitations
+        // KI-Log Nr. 46: Mitglied wird mit JSON { email, role } hinzugefügt; Token liegt nur im Header.
+        // BACKEND: POST /projects/{projectId}/members
         await api.inviteMember(projectId, { email, role });
         ui.closeModal('inviteModal');
-        ui.toast(`Einladung an ${email} gesendet.`);
-        await loadInvitations();
+        ui.toast(`${email} wurde als Mitglied hinzugefügt.`);
+        await refresh();
       } catch (error) {
         ui.showFormError(form, error.message);
       }
@@ -796,7 +757,6 @@
     else if (action === 'plan-sub') openSchedule(task, sub);
     else if (action === 'edit-member') openRoleEditor(el.dataset.user);
     else if (action === 'remove-member') removeMember(el);
-    else if (action === 'withdraw') withdrawInvitation(el);
     else if (action === 'back-to-project') {
       ui.closeModal('subtaskModal');
       ui.closeModal('taskDetailModal');

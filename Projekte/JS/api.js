@@ -255,16 +255,13 @@
     // BACKEND: GET /invitations?status=AUSSTEHEND -> [...]  (nur Anzahl fuer Badge im Menue)
     async getOpenInvitationCount() {
       if (USE_MOCK) return mock.getOpenInvitationCount();
-      const raw = await request('GET', '/invitations/received?status=AUSSTEHEND');
-      const list = Array.isArray(raw) ? raw : (raw.invitations || raw.received || []);
-      return list.length;
+      return 0;
     },
 
     // KI-Log Nr. 40 | BACKEND: GET /invitations/overview -> { received:[...], sent:[...] }
     async getInvitationOverview() {
       if (USE_MOCK) return mock.getInvitationOverview();
-      const raw = await request('GET', '/invitations/overview');
-      return { received: raw.received || raw.incoming || [], sent: raw.sent || raw.outgoing || [] };
+      return { received: [], sent: [] };
     },
 
     // BACKEND: POST /invitations/{invitationId}/accept -> 200 Projektmitgliedschaft
@@ -340,7 +337,7 @@
     // -> [{ id, email, role, sentAt:'YYYY-MM-DD', status }]
     getInvitations(projectId) {
       if (USE_MOCK) return mock.getInvitations(projectId);
-      return request('GET', '/projects/' + encodeURIComponent(projectId) + '/invitations?status=AUSSTEHEND');
+      return Promise.resolve([]);
     },
 
     // KI-Log Nr. 43: Einladung mit eigenem JSON-Vertrag.
@@ -359,7 +356,7 @@
     // BACKEND: DELETE /projects/{projectId}/invitations/{invitationId} -> 204 (Zurueckziehen)
     withdrawInvitation(projectId, invitationId) {
       if (USE_MOCK) return mock.withdrawInvitation(projectId, invitationId);
-      return request('DELETE', '/projects/' + encodeURIComponent(projectId) + '/invitations/' + encodeURIComponent(invitationId));
+      return Promise.reject(new ApiError(501, 'Ausstehende Einladungen werden vom Backend nicht unterstützt.'));
     },
 
     /* ---------- Tasks (Meeting / Langes To-Do) ---------- */
