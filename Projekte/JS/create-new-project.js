@@ -1,8 +1,8 @@
 //KI-Log Nr. 23
 // KI-Log Nr. 46: Token wird bei geschützten Requests ausschließlich im Header übertragen.
 // KI-Log Nr. 44: Lokale Entwicklung kann ohne Login mit Mock-Daten laufen.
-const API_URL = "http://localhost:8080";
-const DEV_BYPASS_AUTH = true;
+const API_URL = "https://plan-b-api-6486e78ed17c.herokuapp.com";
+const DEV_BYPASS_AUTH = false;
  
 const dialog = document.getElementById("dialog-projekt");
 const form = document.getElementById("form-projekt");
@@ -16,14 +16,14 @@ const MELDUNGEN = {
   "project not found": "Projekt nicht gefunden. Bitte die Projektübersicht neu laden."
 };
  
-const STATUS = { active: "Aktiv", completed: "Abgeschlossen" };
-const ROLLEN = { PL: "Projektleiter", member: "Teammitglied" };
+const STATUS = { ACTIVE: "Aktiv", COMPLETED: "Abgeschlossen" };
+const ROLLEN = { PROJECT_LEADER: "Projektleitung", MEMBER: "Teammitglied" };
  
 
 function getToken() {
   const token = DEV_BYPASS_AUTH ? "development-token" : sessionStorage.getItem("token");
   if (!token) {
-    window.location.href = "login.html";
+    window.location.href = "../../Login/HTML/login.html";
   }
   return token;
 }
@@ -66,7 +66,7 @@ form.addEventListener("submit", async (event) => {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + token
       },
-      body: JSON.stringify({ title, description })
+      body: JSON.stringify({ name: title, description })
     });
  
     if (response.status === 401) return zumLogin();
@@ -107,15 +107,22 @@ async function projektAnzeigen(projectId, token) {
     }
  
     
-    document.getElementById("projekt-titel").textContent = projekt.title;
+    document.getElementById("projekt-titel").textContent = projekt.title || projekt.name;
     document.getElementById("projekt-beschreibung").textContent = projekt.description || "";
     document.getElementById("projekt-status").textContent = STATUS[projekt.status] || projekt.status;
  
     const liste = document.getElementById("projekt-mitglieder");
     liste.replaceChildren();
-    for (const mitglied of projekt.members) {
+    const membersResponse = await fetch(`${API_URL}/projects/${encodeURIComponent(projectId)}/members`, {
+      headers: { Accept: "application/json", Authorization: "Bearer " + token }
+    });
+    if (membersResponse.status === 401) return zumLogin();
+    if (!membersResponse.ok) throw new Error("Mitglieder konnten nicht geladen werden.");
+    const members = await membersResponse.json();
+    for (const mitglied of members) {
       const li = document.createElement("li");
-      li.textContent = `${mitglied.name} (${ROLLEN[mitglied.role] || mitglied.role})`;
+      const name = [mitglied.firstName, mitglied.lastName].filter(Boolean).join(" ") || mitglied.email;
+      li.textContent = `${name} (${ROLLEN[mitglied.role] || mitglied.role})`;
       liste.appendChild(li);
     }
  

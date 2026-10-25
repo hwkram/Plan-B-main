@@ -34,12 +34,13 @@
 
   function renderProjects(projects) {
     if (!projects.length) {
-      list.innerHTML = '<p class="empty">Du bist noch in keinem Projekt. Lege ein neues Projekt an oder nimm eine Einladung an.</p>';
+      list.innerHTML = '<p class="empty">Du bist noch in keinem Projekt. Lege ein neues Projekt an oder bitte eine Projektleitung, dich als Mitglied hinzuzufügen.</p>';
       return;
     }
     list.innerHTML = projects.map(p => {
       const closed = p.status === 'ABGESCHLOSSEN';
-      const members = p.memberCount === 1 ? '1 Mitglied' : `${p.memberCount} Mitglieder`;
+      const members = p.memberCount == null ? 'Mitglieder in der Projektansicht'
+        : p.memberCount === 1 ? '1 Mitglied' : `${p.memberCount} Mitglieder`;
       return `
         <a class="project-card${closed ? ' is-closed' : ''}" href="project.html?id=${encodeURIComponent(p.id)}">
           <div class="row">
@@ -47,7 +48,7 @@
             <span class="pill">${esc(ui.STATUS[p.status] || p.status)}</span>
           </div>
           <p>Rolle: ${esc(ui.ROLE[p.myRole] || p.myRole)} · ${members}</p>
-          <p>zuletzt bearbeitet: ${esc(ui.fmtDate(p.updatedAt))}</p>
+          ${p.updatedAt ? `<p>zuletzt bearbeitet: ${esc(ui.fmtDate(p.updatedAt))}</p>` : ''}
         </a>`;
     }).join('');
   }

@@ -167,15 +167,13 @@
       logoutButton.addEventListener('click', async () => {
         if (!window.confirm('Möchtest du dich wirklich abmelden?')) return;
         try { await api.logout(); } catch (e) { /* trotzdem zur Login-Seite */ }
-        window.location.href = '../../login.html';
+        window.location.href = '../../Login/HTML/login.html';
       });
     }
     try {
-      const [me, count] = await Promise.all([api.getCurrentUser(), api.getOpenInvitationCount()]);
+      const me = await api.getCurrentUser();
       const nameEl = $('#currentUserName');
       if (nameEl) nameEl.textContent = me.name;
-      const badge = $('#invitationBadge');
-      if (badge) { badge.textContent = count; badge.hidden = !count; }
       return me;
     } catch (e) {
       return null;

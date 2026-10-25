@@ -1,5 +1,5 @@
 const EMAIL_MUSTER = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; //KI-Log Nr. 6
-const API_URL = "http://localhost:8080"; //KI-Log Nr. 42: Zentrale Auth-URL.
+const API_URL = "https://plan-b-api-6486e78ed17c.herokuapp.com"; //KI-Log Nr. 42: Zentrale Auth-URL.
 
 $("#register").click(function() {
     const firstName = $("#first-name-input").val().trim();
@@ -36,7 +36,7 @@ $.ajax({
         },
           //KI-Log Nr. 14
           error: function (xhr) {
-            if (xhr.status === 400 && xhr.responseJSON && xhr.responseJSON.message === "user already exists") {
+            if (xhr.status === 400 && xhr.responseJSON && String(xhr.responseJSON.message).toLowerCase() === "user already exists") {
                 zeigeFehler("Diese E-Mail ist bereits registriert. Melden Sie sich an oder verwenden Sie eine andere Adresse.");
             } else if (xhr.status === 400) {
                 zeigeFehler("Bitte prüfen Sie Ihre Eingaben.");

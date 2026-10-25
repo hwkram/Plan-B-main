@@ -1,0 +1,19 @@
+name: Verify frontend API
+on:
+  pull_request:
+  push:
+    branches: [main, fix/members-api-contract-audit]
+permissions:
+  contents: read
+jobs:
+  javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: find . -path './.git' -prune -o \( -name '*.js' -o -name '*.cjs' \) -print0 | xargs -0 -n 1 node --check
+      - name: Verify API contract
+        run: node --test tests/api-contract.test.cjs
