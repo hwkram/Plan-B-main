@@ -36,7 +36,11 @@ node --test tests/api-contract.test.cjs
 find . -name '*.js' -not -path './.git/*' -exec node --check {} \;
 ```
 
-Die 13 Node-Tests prüfen konkrete HTTP-Pfade, Authorization-Header, tokenfreie JSON-Bodies, Rollen-/ID-Normalisierung, separate Mitgliederabfragen, PUT-Formate, ausbleibende Invitation-Requests, 401/403/409-Verhalten und lokalen Logout.
+Die 14 Node-Tests prüfen konkrete HTTP-Pfade, Authorization-Header, tokenfreie JSON-Bodies, Rollen-/ID-Normalisierung, separate Mitgliederabfragen, PUT-Formate, ausbleibende Invitation-Requests, 401/403/409-Verhalten, lokalen Logout und vorhandene DOM-Container der Event-Delegation.
+
+Zusätzlich wurden die echten Oberflächen gegen das isolierte lokale PostgreSQL-Backend im Browser geprüft: Registrierung mit Auto-Login, separates Login, Home-Navigation, Projekt anlegen, direkte Mitgliederaufnahme und Duplikatfehler, letzte-Leitung-Sperren, Meeting und Long-To-do mit Teilaufgabe erstellen, Task bearbeiten, Meeting erledigen, Teilaufgabe abschließen mit automatischem Task-Abschluss, reine Mitgliedsansicht ohne Verwaltungsaktionen und bestätigtes Logout. Browserrequests wurden vollständig zum lokalen Backend umgeleitet; die separate HTTP-Suite prüfte CORS direkt mit dem Heroku-Origin. Es wurden keine produktiven Benutzer oder Projekte angelegt.
+
+Desktop (1365 Pixel) und Mobilansicht (375 Pixel) wurden geprüft. Ein mobiler Grid-Überlauf wurde korrigiert; breite Datentabellen scrollen innerhalb ihres Wrappers statt die gesamte Seite zu verbreitern.
 
 Schreibende Browser- und Backend-Tests gehören ausschließlich gegen ein lokales Testsystem. Das Backend benötigt vor einem Produktivdeploy die neue additive Migration `008_add_meeting_priority.sql`. Frontend und Backend daher zusammen ausrollen, nicht nur das Frontend allein.
 

@@ -138,3 +138,12 @@ test('logout discards session even if backend fails', async () => {
   await assert.rejects(api.logout());
   assert.equal(storage.has('token'), false);
 });
+
+test('project event delegation only binds to existing HTML containers', () => {
+  const projectJs = readFileSync(path.join(__dirname, '../Projekte/JS/project.js'), 'utf8');
+  const projectHtml = readFileSync(path.join(__dirname, '../Projekte/HTML/project.html'), 'utf8');
+  const delegation = projectJs.match(/\[('#taskBody'[\s\S]*?)\]\.forEach\(sel/);
+  assert.ok(delegation);
+  for (const [, id] of delegation[1].matchAll(/'#([^']+)'/g))
+    assert.ok(projectHtml.includes(`id="${id}"`), `missing event container: ${id}`);
+});

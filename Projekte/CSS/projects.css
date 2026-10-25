@@ -56,6 +56,7 @@ a { color: inherit; }
 .btn-block { width: 100%; }
 .icon-btn { display: inline-grid; place-items: center; flex: none; width: 44px; height: 44px; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; cursor: pointer; }
 .icon-btn:hover { background: var(--soft); }
+.icon-btn:disabled { opacity: .5; cursor: not-allowed; }
 .icon-btn svg { width: 18px; height: 18px; }
 .link-btn { padding: 0; border: 0; background: none; font-weight: 600; text-align: left; text-decoration: underline; cursor: pointer; }
 .link-btn.light { font-weight: 400; }
@@ -211,7 +212,7 @@ input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .55; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 960px) {
-  .layout { grid-template-columns: 1fr; }
+  .layout { grid-template-columns: minmax(0, 1fr); }
   .page-head { flex-direction: column; }
 }
 @media (max-width: 720px) {
