@@ -24,7 +24,6 @@
     me: null,
     project: null,
     tasks: [],
-    invitations: [],
     expanded: new Set(),
     isLead: false,
     isActive: true,
@@ -425,12 +424,12 @@
 
   async function openMembers() {
     renderMemberItems();
-    $('#invitationItems').innerHTML = '<p class="empty">Das Backend verwaltet direkte Projektmitglieder. Ausstehende Einladungen gibt es hier nicht.</p>';
     ui.openModal('membersModal');
   }
 
   function renderMemberItems() {
     $('#membersModalTitle').textContent = 'Mitglieder · ' + state.project.title;
+    const leaderCount = state.project.members.filter(m => m.role === 'PROJEKTLEITUNG').length;
     $('#memberItems').innerHTML = state.project.members.map(m => `
       <div class="member-item">
         <div class="info">
@@ -438,7 +437,7 @@
           <small>${esc(m.email)} · ${esc(ui.ROLE[m.role])}</small>
         </div>
         <button type="button" class="icon-btn" data-action="edit-member" data-user="${esc(m.userId)}" aria-label="Rolle von ${esc(m.name)} ändern" title="Rolle ändern">${ui.ICON.pencil}</button>
-        <button type="button" class="icon-btn" data-action="remove-member" data-user="${esc(m.userId)}" aria-label="${esc(m.name)} entfernen" title="Aus Projekt entfernen">${ui.ICON.trash}</button>
+        <button type="button" class="icon-btn" data-action="remove-member" data-user="${esc(m.userId)}" aria-label="${esc(m.name)} entfernen" ${m.role === 'PROJEKTLEITUNG' && leaderCount === 1 ? 'disabled title="Die letzte Projektleitung kann nicht entfernt werden"' : 'title="Aus Projekt entfernen"'}>${ui.ICON.trash}</button>
       </div>`).join('');
   }
 
@@ -471,7 +470,12 @@
     const form = $('#roleForm');
     ui.clearFormError(form);
     $('#roleTitle').textContent = 'Rolle ändern · ' + m.name;
-    form.querySelectorAll('input[name="role"]').forEach(r => { r.checked = r.value === m.role; });
+    const lastLeader = m.role === 'PROJEKTLEITUNG'
+      && state.project.members.filter(person => person.role === 'PROJEKTLEITUNG').length === 1;
+    form.querySelectorAll('input[name="role"]').forEach(r => {
+      r.checked = r.value === m.role;
+      r.disabled = lastLeader && r.value === 'TEAMMITGLIED';
+    });
     ui.openModal('roleModal');
   }
 
@@ -481,7 +485,7 @@
     const role = form.querySelector('input[name="role"]:checked').value;
     await ui.withBusy($('#roleSubmit'), async () => {
       try {
-        // BACKEND: PATCH /projects/{projectId}/members/{userId}  { role }
+        // BACKEND: PUT /projects/{projectId}/members/{userId}  { role }
         await api.updateMemberRole(projectId, state.editingMemberId, role);
         ui.closeModal('roleModal');
         ui.toast('Rolle gespeichert.');
@@ -493,7 +497,7 @@
     });
   }
 
-  /* ================= Mitglied einladen (S. 8) ================= */
+  /* ================= Mitglied direkt hinzufügen ================= */
 
   function openInvite() {
     const form = $('#inviteForm');
@@ -502,7 +506,7 @@
     ui.openModal('inviteModal');
   }
 
-  async function sendInvitation(event) {
+  async function addMember(event) {
     event.preventDefault();
     const form = event.currentTarget;
     ui.clearFormError(form);
@@ -517,10 +521,11 @@
       try {
         // KI-Log Nr. 46: Mitglied wird mit JSON { email, role } hinzugefügt; Token liegt nur im Header.
         // BACKEND: POST /projects/{projectId}/members
-        await api.inviteMember(projectId, { email, role });
+        await api.addMember(projectId, { email, role });
         ui.closeModal('inviteModal');
         ui.toast(`${email} wurde als Mitglied hinzugefügt.`);
         await refresh();
+        renderMemberItems();
       } catch (error) {
         ui.showFormError(form, error.message);
       }
@@ -554,7 +559,7 @@
     }
     await ui.withBusy($('#editProjectSubmit'), async () => {
       try {
-        // BACKEND: PATCH /projects/{projectId}  { title, description, status }
+        // BACKEND: PUT /projects/{projectId}  { name, description, status }
         await api.updateProject(projectId, data);
         ui.closeModal('editProjectModal');
         ui.toast('Projekt gespeichert.');
@@ -770,14 +775,14 @@
   }
 
   function bindEvents() {
-    ['#taskBody', '#doneList', '#taskDetailBody', '#subtaskBody', '#subtaskFoot', '#memberItems', '#invitationItems'].forEach(sel => {
+    ['#taskBody', '#doneList', '#taskDetailBody', '#subtaskBody', '#subtaskFoot', '#memberItems'].forEach(sel => {
       $(sel).addEventListener('click', handleClick);
       $(sel).addEventListener('change', handleChange);
     });
 
     $('#openMembersButton').addEventListener('click', openMembers);
     $('#openInviteButton').addEventListener('click', openInvite);
-    $('#inviteForm').addEventListener('submit', sendInvitation);
+    $('#inviteForm').addEventListener('submit', addMember);
     $('#roleForm').addEventListener('submit', saveRole);
     $('#editProjectButton').addEventListener('click', openEditProject);
     $('#editProjectForm').addEventListener('submit', saveProject);

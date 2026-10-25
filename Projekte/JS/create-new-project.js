@@ -16,14 +16,14 @@ const MELDUNGEN = {
   "project not found": "Projekt nicht gefunden. Bitte die Projektübersicht neu laden."
 };
  
-const STATUS = { active: "Aktiv", completed: "Abgeschlossen" };
-const ROLLEN = { PL: "Projektleiter", member: "Teammitglied" };
+const STATUS = { ACTIVE: "Aktiv", COMPLETED: "Abgeschlossen" };
+const ROLLEN = { PROJECT_LEADER: "Projektleitung", MEMBER: "Teammitglied" };
  
 
 function getToken() {
   const token = DEV_BYPASS_AUTH ? "development-token" : sessionStorage.getItem("token");
   if (!token) {
-    window.location.href = "login.html";
+    window.location.href = "../../Login/HTML/login.html";
   }
   return token;
 }
@@ -113,9 +113,16 @@ async function projektAnzeigen(projectId, token) {
  
     const liste = document.getElementById("projekt-mitglieder");
     liste.replaceChildren();
-    for (const mitglied of projekt.members) {
+    const membersResponse = await fetch(`${API_URL}/projects/${encodeURIComponent(projectId)}/members`, {
+      headers: { Accept: "application/json", Authorization: "Bearer " + token }
+    });
+    if (membersResponse.status === 401) return zumLogin();
+    if (!membersResponse.ok) throw new Error("Mitglieder konnten nicht geladen werden.");
+    const members = await membersResponse.json();
+    for (const mitglied of members) {
       const li = document.createElement("li");
-      li.textContent = `${mitglied.name} (${ROLLEN[mitglied.role] || mitglied.role})`;
+      const name = [mitglied.firstName, mitglied.lastName].filter(Boolean).join(" ") || mitglied.email;
+      li.textContent = `${name} (${ROLLEN[mitglied.role] || mitglied.role})`;
       liste.appendChild(li);
     }
  

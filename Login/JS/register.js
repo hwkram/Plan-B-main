@@ -36,7 +36,7 @@ $.ajax({
         },
           //KI-Log Nr. 14
           error: function (xhr) {
-            if (xhr.status === 400 && xhr.responseJSON && xhr.responseJSON.message === "user already exists") {
+            if (xhr.status === 400 && xhr.responseJSON && String(xhr.responseJSON.message).toLowerCase() === "user already exists") {
                 zeigeFehler("Diese E-Mail ist bereits registriert. Melden Sie sich an oder verwenden Sie eine andere Adresse.");
             } else if (xhr.status === 400) {
                 zeigeFehler("Bitte prüfen Sie Ihre Eingaben.");

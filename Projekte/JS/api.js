@@ -37,7 +37,7 @@
   // KI-Log Nr. 42: Login und API verwenden sessionStorage mit demselben Schlüssel.
   const TOKEN_KEY = 'token';
 
-  // Login-Datei liegt im Projekt-Root, zwei Ebenen über Projekte/HTML.
+  // Gemeinsame Login-Seite, relativ zu Projekte/HTML.
   const LOGIN_PAGE = '../../Login/HTML/login.html';
 
   let cachedUser = null; // KI-Log Nr. 41: currentUserId fuer Rollen-/Mitglieder-Mapping wiederverwenden.
@@ -74,6 +74,8 @@
   function goToLogin() {
     if (DEV_BYPASS_AUTH && USE_MOCK) return;
     try { window.sessionStorage.removeItem(TOKEN_KEY); } catch (error) { /* Storage kann gesperrt sein */ }
+    try { window.sessionStorage.removeItem('user-id'); } catch (error) { /* optional */ }
+    cachedUser = null;
     window.location.href = LOGIN_PAGE;
   }
 
@@ -139,7 +141,7 @@
   // KI-Log Nr. 41: Response-Mapper akzeptieren direkte Antworten und gängige Wrapper.
   function normalizeRole(value) {
     const role = String(value || '').toUpperCase();
-    if (['PL', 'PROJECT_LEAD', 'PROJECT_MANAGER', 'PROJEKTLEITER', 'PROJEKTLEITUNG'].includes(role)) return 'PROJEKTLEITUNG';
+    if (['PL', 'LEADER', 'PROJECT_LEAD', 'PROJECT_LEADER', 'PROJECT_MANAGER', 'PROJEKTLEITER', 'PROJEKTLEITUNG'].includes(role)) return 'PROJEKTLEITUNG';
     if (['MEMBER', 'TEAM_MEMBER', 'TEAMMITGLIED'].includes(role)) return 'TEAMMITGLIED';
     return value || 'TEAMMITGLIED';
   }
@@ -165,11 +167,11 @@
       status: normalizeStatus(p.status),
       myRole: normalizeRole(p.myRole || p.role || (currentMember || {}).role),
       updatedAt: p.updatedAt || p.lastModifiedAt || p.lastModified || '',
-      memberCount: p.memberCount ?? members.length,
+      memberCount: p.memberCount ?? (Array.isArray(p.members) ? members.length : null),
       members: members.map(m => ({
         ...m,
         userId: String(m.userId ?? m.id ?? m.memberId ?? ''),
-        name: m.name || m.displayName || m.email || '',
+        name: m.name || m.displayName || [m.firstName, m.lastName].filter(Boolean).join(' ') || m.email || '',
         email: m.email || '',
         role: normalizeRole(m.role)
       }))
@@ -191,7 +193,7 @@
       end: t.end || t.endAt || t.dueAt || t.dueDate || null,
       priority: ({ HIGH: 'HOCH', MEDIUM: 'MITTEL', LOW: 'NIEDRIG' })[priorityRaw] || priorityRaw,
       allParticipants: !!t.allParticipants,
-      participantIds: t.participantIds || (Array.isArray(t.participants) ? t.participants.map(x => typeof x === 'string' ? x : String(x.userId ?? x.id ?? '')) : []),
+      participantIds: (t.participantIds || (Array.isArray(t.participants) ? t.participants.map(x => typeof x === 'object' ? x.userId ?? x.id : x) : [])).map(String),
       done: !!(t.done ?? t.completed),
       doneBy: t.doneBy || null,
       doneAt: t.doneAt || null,
@@ -200,7 +202,8 @@
         id: String(sub.id ?? sub.subtaskId ?? ''),
         title: sub.title || sub.name || '',
         description: sub.description || '',
-        assigneeId: sub.assigneeId || sub.userId || sub.assignedUserId || null,
+        assigneeId: (sub.assigneeId ?? sub.userId ?? sub.assignedUserId) != null
+          ? String(sub.assigneeId ?? sub.userId ?? sub.assignedUserId) : null,
         done: !!(sub.done ?? sub.completed),
         schedule: sub.schedule || null
       }))
@@ -224,8 +227,8 @@
         const me = raw.user || raw.data || raw;
         cachedUser = {
           ...me,
-          id: String(me.id ?? me.userId ?? claims.sub ?? claims.userId ?? ''),
-          name: me.name || me.displayName || claims.name || claims.preferred_username || claims.email || me.email || 'Benutzer',
+          id: String(me.id ?? me.userId ?? claims.userId ?? ''),
+          name: me.name || me.displayName || [me.firstName, me.lastName].filter(Boolean).join(' ') || claims.name || me.email || 'Benutzer',
           email: me.email || claims.email || ''
         };
         return cachedUser;
@@ -249,31 +252,29 @@
         await request('DELETE', '/auth');
       } finally {
         try { window.sessionStorage.removeItem(TOKEN_KEY); } catch (error) { /* Storage kann gesperrt sein */ }
+        try { window.sessionStorage.removeItem('user-id'); } catch (error) { /* optional */ }
+        cachedUser = null;
       }
     },
 
-    // BACKEND: GET /invitations?status=AUSSTEHEND -> [...]  (nur Anzahl fuer Badge im Menue)
+    // Compatibility helper only. There is no invitation API.
     async getOpenInvitationCount() {
       if (USE_MOCK) return mock.getOpenInvitationCount();
       return 0;
     },
 
-    // KI-Log Nr. 40 | BACKEND: GET /invitations/overview -> { received:[...], sent:[...] }
+    // Compatibility helper only. There is no invitation API.
     async getInvitationOverview() {
       if (USE_MOCK) return mock.getInvitationOverview();
       return { received: [], sent: [] };
     },
 
-    // BACKEND: POST /invitations/{invitationId}/accept -> 200 Projektmitgliedschaft
     acceptInvitation(invitationId) {
-      if (USE_MOCK) return mock.acceptInvitation(invitationId);
-      return request('POST', '/invitations/' + encodeURIComponent(invitationId) + '/accept');
+      return Promise.reject(new ApiError(501, 'Das Backend verwendet direkte Projektmitglieder.'));
     },
 
-    // BACKEND: DELETE /invitations/{invitationId} -> 204 (ignorieren)
     ignoreInvitation(invitationId) {
-      if (USE_MOCK) return mock.ignoreInvitation(invitationId);
-      return request('DELETE', '/invitations/' + encodeURIComponent(invitationId));
+      return Promise.reject(new ApiError(501, 'Das Backend verwendet direkte Projektmitglieder.'));
     },
 
     /* ---------- Projekte ---------- */
@@ -288,7 +289,7 @@
       return list.map(normalizeProject);
     },
 
-    // BACKEND: POST /projects  Body { title, description } -> 201 { id }
+    // BACKEND: POST /projects  Body { name, description } -> 200 { id, ... }
     // Ersteller wird im Backend automatisch PROJEKTLEITUNG.
     async createProject(data) {
       if (USE_MOCK) return mock.createProject(data);
@@ -305,24 +306,28 @@
     //      members:[{ userId, name, email, role }] }
     async getProject(projectId) {
       if (USE_MOCK) return mock.getProject(projectId);
-      const raw = await request('GET', '/projects/' + encodeURIComponent(projectId));
-      return normalizeProject(raw);
+      const path = '/projects/' + encodeURIComponent(projectId);
+      const [raw, members] = await Promise.all([request('GET', path), request('GET', path + '/members')]);
+      return normalizeProject({ ...raw, members });
     },
 
-    // BACKEND: PATCH /projects/{projectId}  Body { title, description, status } -> 200 Projekt
+    // BACKEND: PUT /projects/{projectId}  Body { name, description, status } -> 200 Projekt
     async updateProject(projectId, data) {
       if (USE_MOCK) return mock.updateProject(projectId, data);
-      const raw = await request('PUT', '/projects/' + encodeURIComponent(projectId), { update: data });
+      const raw = await request('PUT', '/projects/' + encodeURIComponent(projectId), {
+        name: data.name || data.title,
+        description: data.description || '',
+        status: data.status === 'ABGESCHLOSSEN' ? 'COMPLETED' : 'ACTIVE'
+      });
       return normalizeProject(raw);
     },
 
-    /* ---------- Mitglieder & Einladungen ---------- */
+    /* ---------- Direkte Projektmitglieder ---------- */
 
-    // BACKEND: PATCH /projects/{projectId}/members/{userId}  Body { role } -> 200
+    // BACKEND: PUT /projects/{projectId}/members/{userId}  Body { role } -> 200
     // 409, wenn dadurch keine Projektleitung mehr uebrig waere
     updateMemberRole(projectId, userId, role) {
       if (USE_MOCK) return mock.updateMemberRole(projectId, userId, role);
-      // BACKEND: Mia-Projekt nutzt PL/member als Rollenwerte; bei abweichendem Enum nur diese Abbildung ändern.
       const apiRole = role === 'PROJEKTLEITUNG' ? 'leader' : 'member';
       return request('PUT', '/projects/' + encodeURIComponent(projectId) + '/members/' + encodeURIComponent(userId), { role: apiRole });
     },
@@ -333,27 +338,23 @@
       return request('DELETE', '/projects/' + encodeURIComponent(projectId) + '/members/' + encodeURIComponent(userId));
     },
 
-    // BACKEND: GET /projects/{projectId}/invitations?status=AUSSTEHEND
-    // -> [{ id, email, role, sentAt:'YYYY-MM-DD', status }]
+    // Legacy UI compatibility: no network request.
     getInvitations(projectId) {
       if (USE_MOCK) return mock.getInvitations(projectId);
       return Promise.resolve([]);
     },
 
-    // KI-Log Nr. 43: Einladung mit eigenem JSON-Vertrag.
-    // BACKEND: POST http://localhost:8080/projects/{projectId}/invitations
-    // JSON-Body { email, role } -> 201 Einladung; Token nur im Header.
-    // 409, wenn die Person schon Mitglied oder bereits eingeladen ist
-    inviteMember(projectId, data) {
+    // POST /projects/{projectId}/members, JSON { email, role }, JWT only in header.
+    addMember(projectId, data) {
       const payload = {
         email: String(data.email || '').trim().toLowerCase(),
         role: data.role === 'PROJEKTLEITUNG' ? 'leader' : 'member'
       };
-      if (USE_MOCK) return mock.inviteMember(projectId, data);
+      if (USE_MOCK) return mock.addMember(projectId, data);
       return request('POST', '/projects/' + encodeURIComponent(projectId) + '/members', payload);
     },
 
-    // BACKEND: DELETE /projects/{projectId}/invitations/{invitationId} -> 204 (Zurueckziehen)
+    // Legacy UI compatibility: no network request.
     withdrawInvitation(projectId, invitationId) {
       if (USE_MOCK) return mock.withdrawInvitation(projectId, invitationId);
       return Promise.reject(new ApiError(501, 'Ausstehende Einladungen werden vom Backend nicht unterstützt.'));
@@ -374,7 +375,7 @@
     },
 
     // KI-Log Nr. 43: Meeting und langes To-do verwenden getrennte JSON-Payloads.
-    // BACKEND: POST http://localhost:8080/projects/{projectId}/tasks
+    // BACKEND: POST /projects/{projectId}/tasks
     // Meeting: { type, title, description, start, end, priority,
     //            allParticipants, participantIds }
     // Langes To-do: { type, title, description, start, end, priority,
@@ -414,11 +415,11 @@
       });
     },
 
-    // BACKEND: PUT /tasks/{taskId}  Body = kompletter Task inkl. subtasks -> 200 Task
+    // BACKEND: PUT /projects/{projectId}/tasks/{taskId}, unwrapped task body -> 200 task
     // Neue Teilaufgaben haben id = null, das Backend vergibt die IDs.
     async updateTask(projectId, taskId, data) {
       if (USE_MOCK) return mock.updateTask(taskId, data);
-      const raw = await request('PUT', '/projects/' + encodeURIComponent(projectId) + '/tasks/' + encodeURIComponent(taskId), { update: data });
+      const raw = await request('PUT', '/projects/' + encodeURIComponent(projectId) + '/tasks/' + encodeURIComponent(taskId), data);
       return normalizeTask((raw && raw.task) || raw);
     },
 
@@ -810,20 +811,19 @@
         return delay(p.invitations.filter(i => i.status === 'AUSSTEHEND'));
       },
 
-      inviteMember(projectId, data) {
+      addMember(projectId, data) {
         const db = load();
         const p = project(db, projectId);
         if (!p) return fail(404);
-        if (!isLead(db, p)) return fail(403, 'Nur die Projektleitung kann einladen.');
+        if (!isLead(db, p)) return fail(403, 'Nur die Projektleitung kann Mitglieder hinzufügen.');
         const email = String(data.email || '').trim().toLowerCase();
         if (!validEmail(email)) return fail(400, 'Bitte eine gültige E-Mail-Adresse eingeben.');
         const existing = db.users.find(u => u.email === email);
+        if (!existing) return fail(404, 'Diese E-Mail-Adresse ist nicht registriert.');
         if (existing && p.members.some(m => m.userId === existing.id)) return fail(409, 'Diese Person ist bereits Mitglied.');
-        if (p.invitations.some(i => i.email === email && i.status === 'AUSSTEHEND')) return fail(409, 'Diese Person ist bereits eingeladen.');
-        const invitation = { id: newId(db, 'i'), email, role: data.role === 'PROJEKTLEITUNG' ? 'PROJEKTLEITUNG' : 'TEAMMITGLIED', sentAt: today(), status: 'AUSSTEHEND' };
-        p.invitations.push(invitation);
+        p.members.push({ userId: existing.id, role: data.role === 'PROJEKTLEITUNG' ? 'PROJEKTLEITUNG' : 'TEAMMITGLIED' });
         save(db);
-        return delay(invitation);
+        return delay({ message: 'member added' });
       },
 
       withdrawInvitation(projectId, invitationId) {
