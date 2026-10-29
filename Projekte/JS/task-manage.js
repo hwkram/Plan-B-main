@@ -39,7 +39,12 @@
 
   async function loadData() {
     // BACKEND: GET /projects/{projectId}  und  GET /projects/{projectId}/tasks
-    const [project, tasks] = await Promise.all([api.getProject(projectId), api.getTasks(projectId)]);
+    const [project, tasks, members] = await Promise.all([
+      api.getProject(projectId),
+      api.getTasks(projectId),
+      api.getMembers(projectId)
+    ]);
+    project.members = members;
     state.project = project;
     state.tasks = tasks;
   }
@@ -115,12 +120,10 @@
       allParticipants: task.allParticipants,
       selectedIds: task.participantIds,
       onChange: () => {
-        if (state.subtasks) state.subtasks.setParticipants(state.picker.getValue().participantIds);
       }
     });
     state.subtasks = ui.subtaskEditor($('#editSubtasks'), {
       members: state.project.members, subtasks: task.subtasks, currentUserId: state.me && state.me.id,
-      getAssignableIds: () => state.picker ? state.picker.getValue().participantIds : []
     });
     applyType(task.type);
     ui.openModal('editTaskModal');
@@ -129,6 +132,7 @@
   function applyType(type) {
     const isLong = type === 'LANGES_TODO';
     $('#editSubtaskSection').hidden = !isLong;
+    $('#editTaskPriority').closest('.field').hidden = !isLong;
     $('#editTaskStartLabel').textContent = isLong ? 'Start' : 'Start *';
     $('#editTaskEndLabel').textContent = isLong ? 'Ende / Frist *' : 'Ende *';
   }

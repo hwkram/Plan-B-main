@@ -25,14 +25,14 @@
 
   // KI-Log Nr. 41: API-URL wie im vorhandenen Mia-Projekt als Konfiguration.
   // BACKEND: Diese Basis-URL auf den erreichbaren Server setzen.
-  const API_BASE = 'http://localhost:8080';
+  const API_BASE = 'https://plan-b-api-6486e78ed17c.herokuapp.com';
 
   // KI-Log Nr. 43: Echte Requests an den Backend-Port verwenden.
-  const USE_MOCK = true;
+  const USE_MOCK = false;
 
   // KI-Log Nr. 44: Nur für die lokale Entwicklung ohne Login.
   // Vor dem echten Betrieb unbedingt auf false setzen.
-  const DEV_BYPASS_AUTH = true;
+  const DEV_BYPASS_AUTH = false;
 
   // KI-Log Nr. 42: Login und API verwenden sessionStorage mit demselben Schlüssel.
   const TOKEN_KEY = 'token';
@@ -200,6 +200,7 @@
         id: String(sub.id ?? sub.subtaskId ?? ''),
         title: sub.title || sub.name || '',
         description: sub.description || '',
+        priority: ({ HIGH: 'HOCH', MEDIUM: 'MITTEL', LOW: 'NIEDRIG' })[String(sub.priority || '').toUpperCase()] || sub.priority || null,
         assigneeId: sub.assigneeId || sub.userId || sub.assignedUserId || null,
         done: !!(sub.done ?? sub.completed),
         schedule: sub.schedule || null
@@ -255,16 +256,13 @@
     // BACKEND: GET /invitations?status=AUSSTEHEND -> [...]  (nur Anzahl fuer Badge im Menue)
     async getOpenInvitationCount() {
       if (USE_MOCK) return mock.getOpenInvitationCount();
-      const raw = await request('GET', '/invitations/received?status=AUSSTEHEND');
-      const list = Array.isArray(raw) ? raw : (raw.invitations || raw.received || []);
-      return list.length;
+      return 0;
     },
 
     // KI-Log Nr. 40 | BACKEND: GET /invitations/overview -> { received:[...], sent:[...] }
     async getInvitationOverview() {
       if (USE_MOCK) return mock.getInvitationOverview();
-      const raw = await request('GET', '/invitations/overview');
-      return { received: raw.received || raw.incoming || [], sent: raw.sent || raw.outgoing || [] };
+      return { received: [], sent: [] };
     },
 
     // BACKEND: POST /invitations/{invitationId}/accept -> 200 Projektmitgliedschaft
@@ -295,7 +293,10 @@
     // Ersteller wird im Backend automatisch PROJEKTLEITUNG.
     async createProject(data) {
       if (USE_MOCK) return mock.createProject(data);
-      const raw = await request('POST', '/projects', data);
+      const raw = await request('POST', '/projects', {
+        name: data.name || data.title,
+        description: data.description || ''
+      });
       const result = (raw && (raw.project || raw.data)) || raw || {};
       return { ...result, id: String(result.id ?? result.projectId ?? raw.projectId ?? '') };
     },
@@ -307,6 +308,18 @@
       if (USE_MOCK) return mock.getProject(projectId);
       const raw = await request('GET', '/projects/' + encodeURIComponent(projectId));
       return normalizeProject(raw);
+    },
+
+    async getMembers(projectId) {
+      if (USE_MOCK) return mock.getProject(projectId).then(project => project.members || []);
+      const raw = await request('GET', '/projects/' + encodeURIComponent(projectId) + '/members');
+      const list = Array.isArray(raw) ? raw : (raw.members || []);
+      return list.map(member => ({
+        ...member,
+        userId: String(member.userId ?? member.id ?? ''),
+        name: member.name || [member.firstName, member.lastName].filter(Boolean).join(' '),
+        role: normalizeRole(member.role)
+      }));
     },
 
     // BACKEND: PATCH /projects/{projectId}  Body { title, description, status } -> 200 Projekt
@@ -324,7 +337,7 @@
       if (USE_MOCK) return mock.updateMemberRole(projectId, userId, role);
       // BACKEND: Mia-Projekt nutzt PL/member als Rollenwerte; bei abweichendem Enum nur diese Abbildung ändern.
       const apiRole = role === 'PROJEKTLEITUNG' ? 'PL' : 'member';
-      return request('PATCH', '/projects/' + encodeURIComponent(projectId) + '/members/' + encodeURIComponent(userId), { role: apiRole });
+      return request('PUT', '/projects/' + encodeURIComponent(projectId) + '/members/' + encodeURIComponent(userId), { role: apiRole });
     },
 
     // BACKEND: DELETE /projects/{projectId}/members/{userId} -> 204
@@ -337,7 +350,7 @@
     // -> [{ id, email, role, sentAt:'YYYY-MM-DD', status }]
     getInvitations(projectId) {
       if (USE_MOCK) return mock.getInvitations(projectId);
-      return request('GET', '/projects/' + encodeURIComponent(projectId) + '/invitations?status=AUSSTEHEND');
+      return Promise.resolve([]);
     },
 
     // KI-Log Nr. 43: Einladung mit eigenem JSON-Vertrag.
@@ -347,10 +360,10 @@
     inviteMember(projectId, data) {
       const payload = {
         email: String(data.email || '').trim().toLowerCase(),
-        role: data.role === 'PROJEKTLEITUNG' ? 'PL' : 'member'
+        role: data.role === 'PROJEKTLEITUNG' ? 'PROJECT_LEADER' : 'MEMBER'
       };
       if (USE_MOCK) return mock.inviteMember(projectId, data);
-      return request('POST', '/projects/' + encodeURIComponent(projectId) + '/invitations', payload);
+      return request('POST', '/projects/' + encodeURIComponent(projectId) + '/members', payload);
     },
 
     // BACKEND: DELETE /projects/{projectId}/invitations/{invitationId} -> 204 (Zurueckziehen)
@@ -361,16 +374,42 @@
 
     /* ---------- Tasks (Meeting / Langes To-Do) ---------- */
 
-    // BACKEND: GET /projects/{projectId}/tasks
-    // -> [{ id, projectId, type, title, description, start, end, priority,
-    //       allParticipants, participantIds:[], done, doneBy, doneAt,
-    //       subtasks:[{ id, title, description, assigneeId|null, done }] }]
+    // Meetings and long To-Dos are separate backend resources.
     async getTasks(projectId) {
       if (USE_MOCK) return mock.getTasks(projectId);
-      const raw = await request('GET', '/projects/' + encodeURIComponent(projectId) + '/tasks');
-      const data = raw && (raw.data || raw);
-      const list = Array.isArray(data) ? data : (data.tasks || data.items || []);
-      return list.map(normalizeTask);
+      const [meetings, longTodos] = await Promise.all([
+        api.getMeetings(projectId),
+        api.getLongTodos(projectId)
+      ]);
+      return meetings.concat(longTodos).sort((a, b) => String(a.start || '').localeCompare(String(b.start || '')));
+    },
+
+    async getMeetings(projectId) {
+      if (USE_MOCK) return mock.getTasks(projectId).then(list => list.filter(task => task.type === 'MEETING'));
+      const raw = await request('GET', '/projects/' + encodeURIComponent(projectId) + '/meetings');
+      const list = Array.isArray(raw) ? raw : (raw.meetings || []);
+      return list.map(item => normalizeTask({
+        ...item,
+        id: item.meetingId,
+        projectId,
+        type: 'MEETING',
+        start: item.startDateTime,
+        end: item.endDateTime
+      }));
+    },
+
+    async getLongTodos(projectId) {
+      if (USE_MOCK) return mock.getTasks(projectId).then(list => list.filter(task => task.type === 'LANGES_TODO'));
+      const raw = await request('GET', '/projects/' + encodeURIComponent(projectId) + '/long-todos');
+      const list = Array.isArray(raw) ? raw : (raw.longTodos || raw.todos || []);
+      return list.map(item => normalizeTask({
+        ...item,
+        id: item.longToDoId,
+        projectId,
+        type: 'LANGES_TODO',
+        start: item.startDateTime,
+        end: item.endDateTime
+      }));
     },
 
     // KI-Log Nr. 43: Meeting und langes To-do verwenden getrennte JSON-Payloads.
@@ -381,37 +420,39 @@
     //                 allParticipants, participantIds, subtasks }
     async createTask(projectId, data) {
       if (USE_MOCK) return mock.createTask(projectId, data);
-      const raw = await request('POST', '/projects/' + encodeURIComponent(projectId) + '/tasks', data);
-      return normalizeTask((raw && raw.task) || raw);
+      return data.type === 'MEETING'
+        ? api.createMeeting(projectId, data)
+        : api.createLongTodo(projectId, data);
     },
 
     // KI-Log Nr. 43: Meeting-Payload ohne Teilaufgaben.
     createMeeting(projectId, data) {
-      return api.createTask(projectId, {
-        type: 'MEETING',
+      if (USE_MOCK) return mock.createTask(projectId, { ...data, type: 'MEETING' });
+      return request('POST', '/projects/' + encodeURIComponent(projectId) + '/meetings', {
         title: data.title,
         description: data.description,
-        start: data.start,
-        end: data.end,
-        priority: data.priority,
-        allParticipants: data.allParticipants,
+        startDateTime: data.start,
+        endDateTime: data.end,
         participantIds: data.participantIds
-      });
+      }).then(raw => normalizeTask({ ...(raw || {}), id: raw && raw.meetingId, projectId, type: 'MEETING', start: data.start, end: data.end, title: data.title }));
     },
 
     // KI-Log Nr. 43: Langes-To-do-Payload mit Teilaufgaben und optionalem Start.
     createLongTodo(projectId, data) {
-      return api.createTask(projectId, {
-        type: 'LANGES_TODO',
+      if (USE_MOCK) return mock.createTask(projectId, { ...data, type: 'LANGES_TODO' });
+      return request('POST', '/projects/' + encodeURIComponent(projectId) + '/long-todos', {
         title: data.title,
         description: data.description,
-        start: data.start || null,
-        end: data.end,
+        startDateTime: data.start || null,
+        endDateTime: data.end,
         priority: data.priority,
-        allParticipants: data.allParticipants,
-        participantIds: data.participantIds,
-        subtasks: data.subtasks
-      });
+        assignedMemberIds: data.participantIds,
+        subtasks: (data.subtasks || []).map(sub => ({
+          title: sub.title,
+          description: sub.description,
+          priority: sub.priority
+        }))
+      }).then(raw => normalizeTask({ ...(raw || {}), id: raw && raw.longToDoId, projectId, type: 'LANGES_TODO', start: data.start, end: data.end, title: data.title, priority: data.priority, subtasks: data.subtasks }));
     },
 
     // BACKEND: PUT /tasks/{taskId}  Body = kompletter Task inkl. subtasks -> 200 Task
@@ -448,8 +489,9 @@
     // Backend setzt das lange To-Do automatisch auf erledigt, wenn alle Teilaufgaben erledigt sind.
     async setSubtaskDone(taskId, subtaskId, done) {
       if (USE_MOCK) return mock.setSubtaskDone(taskId, subtaskId, done);
-      const raw = await request('PATCH', '/tasks/' + encodeURIComponent(taskId) + '/subtasks/' + encodeURIComponent(subtaskId), { done });
-      return raw && raw.task ? normalizeTask(raw.task) : (raw || { id: subtaskId, done });
+      return request('PUT', '/long-todos/' + encodeURIComponent(taskId) + '/subtasks/' + encodeURIComponent(subtaskId), {
+        update: { attribute: 'done', newValue: done }
+      });
     },
 
     // KI-Log Nr. 39 | BACKEND: POST /tasks/{taskId}/subtasks/{subtaskId}/schedule  Body { date, from, to } -> 200 Teilaufgabe
